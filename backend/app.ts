@@ -5,6 +5,7 @@ import path from 'path';
 import { userRouter } from './routes/user';
 import { DbSession } from './db';
 import { fileURLToPath } from 'url';
+import { contactRouter } from './routes/contact';
 
 dotenv.config({
     path: path.resolve(
@@ -24,6 +25,7 @@ app.get('/', (_, res) => {
 });
 
 app.use('/user', userRouter);
+app.use('/contact', contactRouter)
 
 if (!process.env.BACKEND_PORT) {
     throw new Error('BACKEND_PORT is not set');
