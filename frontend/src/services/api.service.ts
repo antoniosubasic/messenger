@@ -5,7 +5,7 @@ import type { IMessage } from '@/models/message-model';
 import type { Contact } from '@/models/contact-model';
 import { DateFormatService } from './date-format.service';
 import { storageService } from '@/services/storage.service';
-import { encryptionService } from './encryption.service';
+import { encryptionService, type IDecryptedMessage } from './encryption.service';
 import sodium from 'libsodium-wrappers';
 
 export class ApiService {
@@ -360,6 +360,24 @@ export class ApiService {
             ...data,
             timestamp: DateFormatService.createDateWithTimezone(data.timestamp)
         };
+    }
+
+    public async storeMessageDecrypted(content: IDecryptedMessage[], token: string, userId: number): Promise<IMessage[]> {
+        const data = await this.fetchApi<any>(`${this.baseUrl}/message/decrypted/${userId}`, {
+            method: 'POST',
+            body: JSON.stringify({
+                content: content
+            })
+        }, token);
+
+        if (data && data.data) {
+            return data.data.map((message: any) => ({
+                ...message,
+                timestamp: DateFormatService.createDateWithTimezone(message.timestamp)
+            }));
+        }
+        
+        return [];
     }
 }
 

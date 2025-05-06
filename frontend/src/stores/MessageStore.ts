@@ -302,6 +302,9 @@ export const useMessageStore = defineStore('messages', () => {
                     storageService.storeMessages(messages);
                 }
             }
+
+
+            
             return true;
         }
         catch (error) {
