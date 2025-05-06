@@ -118,3 +118,25 @@ Content-Type: application/json
     "receiverId": 4,
     "content": "Hello, this is a test message to a blocked user."
 }
+
+### Store decrypted messages - fixed format
+POST {{baseUrl}}/message/decrypted/{{userId}}
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+    "content": [
+        {
+            "sender_uid": 1,
+            "receiver_uid": 2,
+            "content": "Hello, this is a decrypted message.",
+            "timestamp": "2023-05-06T10:00:00Z"
+        },
+        {
+            "sender_uid": 1,
+            "receiver_uid": 2,
+            "content": "This is another decrypted message.",
+            "timestamp": "2023-05-06T10:01:00Z"
+        }
+    ]
+}

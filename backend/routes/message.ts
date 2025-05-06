@@ -80,9 +80,8 @@ msgRouter.post('/:userId/:receiverId', authenticateToken, async (req: Authentica
     }
 });
 
-msgRouter.post('/decrypted/:userId/:receiverID', authenticateToken, async (req: AuthenticatedRequest,res:Response) => {
+msgRouter.post('/decrypted/:userId', authenticateToken, async (req: AuthenticatedRequest,res:Response) => {
     const userId = parseInt(req.params.userId);
-    const receiverId = parseInt(req.params.receiverID);
 
     const { content } = req.body as { content: IMessageDecrypted[] };
 
@@ -98,7 +97,13 @@ msgRouter.post('/decrypted/:userId/:receiverID', authenticateToken, async (req: 
     try {
         const msgUtils = new MessageUtils(db);
 
-        const response = await msgUtils.storeDecryptedMessages(userId,receiverId,content);
+     
+        const validatedContent = content.map(msg => ({
+            ...msg,
+            sender_uid: userId 
+        }));
+
+        const response = await msgUtils.storeDecryptedMessages(validatedContent);
 
         await db.complete(response.statusCode === StatusCodes.OK);
 
@@ -111,7 +116,4 @@ msgRouter.post('/decrypted/:userId/:receiverID', authenticateToken, async (req: 
             error: "An unexpected error occurred while processing your request"
         });
     }
-
-
-
 });
