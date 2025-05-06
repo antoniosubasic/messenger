@@ -5,6 +5,7 @@ import { MessageResponse, MessageUtils } from '../utilities/message-utils';
 import { AuthenticatedRequest, authenticateToken } from '../middleware/auth-middleware';
 import { io } from '../app';
 
+
 export const msgRouter = Router();
 
 msgRouter.get('/:userId', authenticateToken, async (req: AuthenticatedRequest, res: Response) => {
@@ -76,4 +77,38 @@ msgRouter.post('/:userId/:receiverId', authenticateToken, async (req: Authentica
             error: "An unexpected error occurred while processing your request"
         });
     }
+});
+
+msgRouter.post('/decrypted/:userId/:receiverID', authenticateToken, async (req: AuthenticatedRequest,res:Response) => {
+    const userId = parseInt(req.params.userId);
+    const receiverId = parseInt(req.params.receiverID);
+
+    const { content } = req.body;
+
+    
+    if (userId !== req.user?.uid) {
+        res.status(StatusCodes.FORBIDDEN).send({
+            error: 'You can only send messages as yourself'
+        });
+        return;
+    }
+
+    let db = await DbSession.create(false);
+    try {
+        const msgUtils = new MessageUtils(db);
+
+        const response = await msgUtils.storeDecryptedMessages(userId,receiverId,content);
+
+        await db.complete(response.statusCode === StatusCodes.OK);
+
+    } catch (error) {
+        console.error(error);
+        await db.complete(false);
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+            error: "An unexpected error occurred while processing your request"
+        });
+    }
+
+
+
 });
