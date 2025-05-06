@@ -4,7 +4,7 @@ import type { IMessage } from '@/models/message-model'
 import {  apiService } from '@/services/api.service'
 import {  storageService } from '@/services/storage.service'
 import { websocketService } from '@/services/websocket.service'
-import { encryptionService } from '@/services/encryption.service'
+import { encryptionService, type IDecryptedMessage } from '@/services/encryption.service'
 import type { Contact } from '@/models/contact-model'
 
 export const useMessageStore = defineStore('messages', () => {
@@ -296,15 +296,19 @@ export const useMessageStore = defineStore('messages', () => {
             for (const contact of contactsId) {
                 const contactId = contact.contactUserId;
                 console.log(`Fetching messages for contact ${contactId}`);
-                const messages = await apiService.getMessages(userId, contactId, token.value);
+                const messages: IMessage[] = await apiService.getMessages(userId, contactId, token.value);
                 
                 if (messages && messages.length > 0) {
                     storageService.storeMessages(messages);
                 }
+
+                let decryptedMessage: IDecryptedMessage[] = [];
+
+                
             }
 
-
             
+
             return true;
         }
         catch (error) {
