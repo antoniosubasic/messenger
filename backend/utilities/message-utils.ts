@@ -5,7 +5,7 @@ import { BaseResponse, Utils } from "./utils";
 
 export type MessageResponse = BaseResponse<IMessage[]>
 
-export type DecryptedMessageResponse = BaseResponse<IMessageDecrypted>
+export type DecryptedMessageResponse = BaseResponse<IMessageDecrypted[]>
 
 
 
@@ -104,7 +104,7 @@ export class MessageUtils extends Utils {
         }
     }
     
-    async storeDecryptedMessages(sender_uid: number, receiver_uid: number, content: any): Promise<DecryptedMessageResponse> {
+    async storeDecryptedMessages(sender_uid: number, receiver_uid: number, content: IMessageDecrypted[]): Promise<DecryptedMessageResponse> {
         if (!this.isValidUserId(sender_uid) || !this.isValidUserId(receiver_uid)) {
             return Promise.resolve(this.createErrorResponse(
                 StatusCodes.BAD_REQUEST,
@@ -139,33 +139,21 @@ export class MessageUtils extends Utils {
                 "No Messages to push"
             ));
          }
-
+         const fetchedMessages:IMessageDecrypted[] = [];
          try {
+            for(const message of content){
+                const result = await this.dbSession.query(`
+                    INSERT INTO decrypted_messages (sender_uid, receiver_uid, content,timestamp)
+                    VALUES ($1, $2, $3, $4)
+                    RETURNING mid, sender_uid, receiver_uid, content, timestamp`,
+                    [message.sender_uid, message.receiver_uid, message.content,message.timestamp]);
+                
+                    fetchedMessages.push(result.rows[0]);
+                }
 
-            const result = await this.dbSession.query(`
-                INSERT INTO decrypted_messages (sender_uid, receiver_uid, content)
-                VALUES ($1, $2, $3, $4)
-                RETURNING mid, sender_uid, receiver_uid, content, timestamp`,
-                [sender_uid, receiver_uid, content]
-            );
-
-            if(result.rowCount === 0){
-                return this.createErrorResponse(                  
-                    StatusCodes.INTERNAL_SERVER_ERROR,
-                    'An Error accured while trying to process the messages.'
-                )
-            }
-
-            const Message: IMessageDecrypted = {
-                mid: result.rows[0].mid,
-                sender_uid: result.rows[0].sender_uid,
-                receiver_uid: result.rows[0].receiver_uid,
-                content: result.rows[0].content,
-                timestamp: result.rows[0].timestamp
-            };
 
             return Promise.resolve(this.createSuccessResponse(
-                Message,
+                fetchedMessages,
                 StatusCodes.OK
             ));
 

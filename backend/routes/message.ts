@@ -4,6 +4,7 @@ import { DbSession } from '../db';
 import { MessageResponse, MessageUtils } from '../utilities/message-utils';
 import { AuthenticatedRequest, authenticateToken } from '../middleware/auth-middleware';
 import { io } from '../app';
+import { IMessage, IMessageDecrypted } from '../models/message-model';
 
 
 export const msgRouter = Router();
@@ -83,7 +84,7 @@ msgRouter.post('/decrypted/:userId/:receiverID', authenticateToken, async (req: 
     const userId = parseInt(req.params.userId);
     const receiverId = parseInt(req.params.receiverID);
 
-    const { content } = req.body;
+    const { content } = req.body as { content: IMessageDecrypted[] };
 
     
     if (userId !== req.user?.uid) {
@@ -100,6 +101,8 @@ msgRouter.post('/decrypted/:userId/:receiverID', authenticateToken, async (req: 
         const response = await msgUtils.storeDecryptedMessages(userId,receiverId,content);
 
         await db.complete(response.statusCode === StatusCodes.OK);
+
+        res.status(response.statusCode).json(response)
 
     } catch (error) {
         console.error(error);
