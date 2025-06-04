@@ -15,7 +15,17 @@ endif::[]
 :title-slide-transition: zoom
 :title-slide-transition-speed: fast
 
-
+++++
+<style>
+pre, code {
+  white-space: pre-wrap !important;
+  word-break: break-all !important;
+  font-size: 1.1em !important;
+  max-height: none !important;
+  overflow: visible !important;
+}
+</style>
+++++
 
 == Project Overview
 
@@ -78,29 +88,23 @@ public async encryptMessage(
     content: string
 ): Promise<IEncryptedMessage> {
     await sodium.ready;
-    
     // Generate a shared secret using sender's private key and receiver's public key
     const senderSecretKey = sodium.from_base64(sender.private_key, sodium.base64_variants.ORIGINAL);
     const receiverPublicKey = sodium.from_base64(receiver.public_key, sodium.base64_variants.ORIGINAL);
-    
     const sharedSecret = sodium.crypto_box_beforenm(receiverPublicKey, senderSecretKey);
-    
     // Generate a random nonce
     const nonce = sodium.randombytes_buf(sodium.crypto_secretbox_NONCEBYTES);
     const nonceBase64 = sodium.to_base64(nonce, sodium.base64_variants.ORIGINAL);
-    
     // Encrypt the message using the shared secret and nonce
     const messageBytes = sodium.from_string(content);
     const encryptedMessage = sodium.crypto_secretbox_easy(messageBytes, nonce, sharedSecret);
     const encryptedContentBase64 = sodium.to_base64(encryptedMessage, sodium.base64_variants.ORIGINAL);
-    
     return { encryptedContentBase64, nonceBase64 };
 }
 ----
 
 === Message Handling Without Access to Content
 
-[.code-block-style]
 [source,typescript]
 ----
 // From message-utils.ts - Shows how the server handles encrypted messages
@@ -113,7 +117,6 @@ async sendMessage(sender_uid: number, receiver_uid: number, content: string, non
         RETURNING mid, sender_uid, receiver_uid, content, nonce, timestamp`,
             [sender_uid, receiver_uid, content, nonce]
         );
-
         // The server only stores and forwards the encrypted content
         // It never has access to the plaintext message
         const message: IMessage = {
@@ -124,7 +127,6 @@ async sendMessage(sender_uid: number, receiver_uid: number, content: string, non
             nonce: result.rows[0].nonce,
             timestamp: result.rows[0].timestamp
         };
-
         return this.createSuccessResponse(message);
     } catch (error) {
         console.error('Error sending message:', error);
@@ -136,18 +138,6 @@ async sendMessage(sender_uid: number, receiver_uid: number, content: string, non
 }
 ----
 
-++++
-<style>
-.code-block-style pre {
-  white-space: pre-wrap !important;
-  word-break: break-all !important;
-  font-size: 1.1em !important;
-  max-height: none !important;
-  overflow: visible !important;
-}
-</style>
-++++
-
 === Real-time Communication with WebSockets
 
 [source,typescript]
@@ -157,23 +147,19 @@ public connect(userId: number, token: string): void {
     if (this.socket && this.socket.connected) {
         return;
     }
-
     this.socket = io(this.baseUrl, {
         auth: { token },
         transports: ['websocket']
     });
-
     this.socket.on('connect', () => {
         console.log('WebSocket connected');
         // Join a room specific to this user for receiving messages
         this.socket.emit('join', { userId });
     });
-
     this.socket.on('new_message', (message) => {
         // Notify message handlers when a new message arrives
         this.messageHandlers.forEach(handler => handler(message));
     });
-
     // Error handling, reconnection logic, etc.
 }
 ----
@@ -182,20 +168,15 @@ public connect(userId: number, token: string): void {
 
 [source,typescript]
 ----
-
 public storeMessages(IncomingMessages: IMessage[]): void {
     if (IncomingMessages.length === 0) {
         console.log("messages");
         return;
     }
-
     const userId: number = IncomingMessages[0].sender_uid;
     const receiverId: number = IncomingMessages[0].receiver_uid;
-
     const existingMessagesStr = localStorage.getItem('local_message_storing');
     let existingMessages: any = { messages: {} };
-
-    
     localStorage.setItem('local_message_storing', JSON.stringify(existingMessages));
 }
 ----
@@ -209,13 +190,10 @@ async function sendContactRequest(contactUserId: number) {
     if (!currentUserId.value || !token.value) {
         throw new Error('You must be logged in to send contact requests');
     }
-
     isLoading.value = true;
     requestError.value = undefined;
-
     try {
         await apiService.addContact(currentUserId.value, contactUserId, token.value);
-        
         // Update the contact lists after sending a request
         await fetchOutgoingContactRequests();
         return true;
