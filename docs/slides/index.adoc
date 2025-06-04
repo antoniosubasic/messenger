@@ -14,6 +14,10 @@ ifndef::env-ide[]
 endif::[]
 :title-slide-transition: zoom
 :title-slide-transition-speed: fast
+:source-highlighter: highlightjs
+:highlightjs-theme: github
+:highlightjs-languages: typescript, javascript, json, bash, sql
+:highlightjs-line-numbers-mode: true   
 
 
 == Project Overview
@@ -169,7 +173,7 @@ public connect(userId: number, token: string): void {
 
 [source,typescript]
 ----
-// From storage.service.ts - Shows local message storage capability
+
 public storeMessages(IncomingMessages: IMessage[]): void {
     if (IncomingMessages.length === 0) {
         console.log("messages");
@@ -182,8 +186,6 @@ public storeMessages(IncomingMessages: IMessage[]): void {
     const existingMessagesStr = localStorage.getItem('local_message_storing');
     let existingMessages: any = { messages: {} };
 
-    // Process and merge with existing messages
-    // Store locally for offline access
     
     localStorage.setItem('local_message_storing', JSON.stringify(existingMessages));
 }
