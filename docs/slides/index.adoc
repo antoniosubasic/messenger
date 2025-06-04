@@ -1,8 +1,8 @@
-= E2e Encrypted Messenger
+= E2E Encrypted Messenger
 :revnumber: 1.0
 :revdate: {docdate}
 :encoding: utf-8
-:lang: de
+:lang: en
 :doctype: article
 :icons: font
 :iconfont-remote!:
@@ -15,4 +15,57 @@ endif::[]
 :title-slide-transition: zoom
 :title-slide-transition-speed: fast
 
-== Test Slide 
+
+== Project Overview
+
+=== What is the E2E Encrypted Messenger?
+
+A self-hosted messenger with end-to-end encryption that prioritizes privacy and security. The application offers:
+
+* **Complete end-to-end encryption** of all message contents
+* **Self-hosting capability** for full control over your data
+* **Modern web interface** with responsive design
+* **Contact management system** with friend requests
+* **Local message storage** for offline access
+
+== Technology Stack
+
+=== Frontend
+* Vue.js 3 with Composition API
+* TypeScript for type-safe development
+* Tailwind CSS for modern UI design
+* Vite as build tool and development server
+* WebSocket for real-time message transmission
+* libsodium for client-side cryptography
+
+=== Backend
+* Node.js with Express
+* TypeScript for type-safe API development
+* PostgreSQL for data storage
+* JWT for authentication
+* Docker for easy deployment and containerization
+
+=== Architecture
+
+The application follows a client-server architecture:
+
+* **Client (Frontend)**: Encrypts messages before sending and decrypts received messages locally
+* **Server (Backend)**: Stores only encrypted messages and forwards them to the correct recipients
+* **Database**: Stores user accounts, contacts, and encrypted messages
+
+=== Security Concept
+
+* **Key exchange**: Asymmetric encryption for secure key exchange
+* **Message encryption**: Symmetric encryption for message contents
+* **Zero-knowledge**: The server has no access to unencrypted message contents
+* **Local key storage**: Private keys never leave the user's device
+
+
+
+== Team Members
+
+* **Mark Grünzweil** (https://github.com/m-gruen[GitHub])
+* **Henry Ladstätter** (https://github.com/HenryLad[GitHub])
+* **Antonio Subašić** (https://github.com/antoniosubasic[GitHub])
+* **David Vrhovac** (https://github.com/PlutoTinte06[GitHub])
+
