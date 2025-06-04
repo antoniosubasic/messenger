@@ -1,0 +1,36 @@
+name: Docs
+
+on:
+  push:
+    branches:
+      - 'main'
+      - 'feat/asciidoc-slides'
+    paths:
+      - docs/**
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  build:
+    name: Build & Publish 🚀
+    runs-on: ubuntu-latest
+    env:
+      INPUTPATH: docs
+      BRANCH: gh-pages
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Ensure all .sh files are executable
+        run: |
+          find . -name "*.sh" -exec chmod +x {} \;
+
+      - name: run docker
+        run: |
+          sudo ${{ env.INPUTPATH }}/scripts/docker-convert.sh ${{ env.INPUTPATH }}
+          tree
+
+      - name: Deploy to GitHub Pages
+        uses: JamesIves/github-pages-deploy-action@releases/v4
+        with:
+          branch: ${{ env.BRANCH }}
+          folder: ${{ env.INPUTPATH }}
