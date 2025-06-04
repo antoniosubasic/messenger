@@ -22,6 +22,8 @@ endif::[]
 
 A self-hosted messenger with end-to-end encryption that prioritizes privacy and security. The application offers:
 
+=== Features of E2E Encrypted Messenger
+
 * **Complete end-to-end encryption** of all message contents
 * **Self-hosting capability** for full control over your data
 * **Modern web interface** with responsive design
