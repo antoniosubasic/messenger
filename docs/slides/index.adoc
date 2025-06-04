@@ -15,17 +15,6 @@ endif::[]
 :title-slide-transition: zoom
 :title-slide-transition-speed: fast
 
-++++
-<style>
-pre, code {
-  white-space: pre-wrap !important;
-  word-break: break-all !important;
-  font-size: 1.1em !important;
-  max-height: none !important;
-  overflow: visible !important;
-}
-</style>
-++++
 
 == Project Overview
 
