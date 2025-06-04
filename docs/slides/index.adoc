@@ -14,10 +14,7 @@ ifndef::env-ide[]
 endif::[]
 :title-slide-transition: zoom
 :title-slide-transition-speed: fast
-:source-highlighter: highlightjs
-:highlightjs-theme: github
-:highlightjs-languages: typescript, javascript, json, bash, sql
-:highlightjs-line-numbers-mode: true   
+
 
 
 == Project Overview
@@ -103,12 +100,12 @@ public async encryptMessage(
 
 === Message Handling Without Access to Content
 
+[.code-block-style]
 [source,typescript]
 ----
 // From message-utils.ts - Shows how the server handles encrypted messages
 async sendMessage(sender_uid: number, receiver_uid: number, content: string, nonce: string): Promise<BaseResponse<IMessage>> {
     // Perform validations (user exists, are contacts, not blocked, etc.)
-    
     try {
         const result = await this.dbSession.query(`
         INSERT INTO message (sender_uid, receiver_uid, content, nonce)
@@ -138,6 +135,18 @@ async sendMessage(sender_uid: number, receiver_uid: number, content: string, non
     }
 }
 ----
+
+++++
+<style>
+.code-block-style pre {
+  white-space: pre-wrap !important;
+  word-break: break-all !important;
+  font-size: 1.1em !important;
+  max-height: none !important;
+  overflow: visible !important;
+}
+</style>
+++++
 
 === Real-time Communication with WebSockets
 
