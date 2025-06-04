@@ -62,7 +62,161 @@ The application follows a client-server architecture:
 * **Zero-knowledge**: The server has no access to unencrypted message contents
 * **Local key storage**: Private keys never leave the user's device
 
+== Code Highlights
 
+Here are some key code samples that demonstrate the core functionality of our application:
+
+=== End-to-End Encryption Implementation
+
+[source,typescript]
+----
+// From encryption.service.ts - Shows how messages are encrypted before sending
+public async encryptMessage(
+    sender: AuthenticatedUser, 
+    receiver: User, 
+    content: string
+): Promise<IEncryptedMessage> {
+    await sodium.ready;
+    
+    // Generate a shared secret using sender's private key and receiver's public key
+    const senderSecretKey = sodium.from_base64(sender.private_key, sodium.base64_variants.ORIGINAL);
+    const receiverPublicKey = sodium.from_base64(receiver.public_key, sodium.base64_variants.ORIGINAL);
+    
+    const sharedSecret = sodium.crypto_box_beforenm(receiverPublicKey, senderSecretKey);
+    
+    // Generate a random nonce
+    const nonce = sodium.randombytes_buf(sodium.crypto_secretbox_NONCEBYTES);
+    const nonceBase64 = sodium.to_base64(nonce, sodium.base64_variants.ORIGINAL);
+    
+    // Encrypt the message using the shared secret and nonce
+    const messageBytes = sodium.from_string(content);
+    const encryptedMessage = sodium.crypto_secretbox_easy(messageBytes, nonce, sharedSecret);
+    const encryptedContentBase64 = sodium.to_base64(encryptedMessage, sodium.base64_variants.ORIGINAL);
+    
+    return { encryptedContentBase64, nonceBase64 };
+}
+----
+
+=== Message Handling Without Access to Content
+
+[source,typescript]
+----
+// From message-utils.ts - Shows how the server handles encrypted messages
+async sendMessage(sender_uid: number, receiver_uid: number, content: string, nonce: string): Promise<BaseResponse<IMessage>> {
+    // Perform validations (user exists, are contacts, not blocked, etc.)
+    
+    try {
+        const result = await this.dbSession.query(`
+        INSERT INTO message (sender_uid, receiver_uid, content, nonce)
+        VALUES ($1, $2, $3, $4)
+        RETURNING mid, sender_uid, receiver_uid, content, nonce, timestamp`,
+            [sender_uid, receiver_uid, content, nonce]
+        );
+
+        // The server only stores and forwards the encrypted content
+        // It never has access to the plaintext message
+        const message: IMessage = {
+            mid: result.rows[0].mid,
+            sender_uid: result.rows[0].sender_uid,
+            receiver_uid: result.rows[0].receiver_uid,
+            content: result.rows[0].content,
+            nonce: result.rows[0].nonce,
+            timestamp: result.rows[0].timestamp
+        };
+
+        return this.createSuccessResponse(message);
+    } catch (error) {
+        console.error('Error sending message:', error);
+        return this.createErrorResponse(
+            StatusCodes.INTERNAL_SERVER_ERROR,
+            'Failed to send message.'
+        );
+    }
+}
+----
+
+=== Real-time Communication with WebSockets
+
+[source,typescript]
+----
+// From websocket.service.ts - Shows real-time message delivery
+public connect(userId: number, token: string): void {
+    if (this.socket && this.socket.connected) {
+        return;
+    }
+
+    this.socket = io(this.baseUrl, {
+        auth: { token },
+        transports: ['websocket']
+    });
+
+    this.socket.on('connect', () => {
+        console.log('WebSocket connected');
+        // Join a room specific to this user for receiving messages
+        this.socket.emit('join', { userId });
+    });
+
+    this.socket.on('new_message', (message) => {
+        // Notify message handlers when a new message arrives
+        this.messageHandlers.forEach(handler => handler(message));
+    });
+
+    // Error handling, reconnection logic, etc.
+}
+----
+
+=== Local Message Storage for Offline Access
+
+[source,typescript]
+----
+// From storage.service.ts - Shows local message storage capability
+public storeMessages(IncomingMessages: IMessage[]): void {
+    if (IncomingMessages.length === 0) {
+        console.log("messages");
+        return;
+    }
+
+    const userId: number = IncomingMessages[0].sender_uid;
+    const receiverId: number = IncomingMessages[0].receiver_uid;
+
+    const existingMessagesStr = localStorage.getItem('local_message_storing');
+    let existingMessages: any = { messages: {} };
+
+    // Process and merge with existing messages
+    // Store locally for offline access
+    
+    localStorage.setItem('local_message_storing', JSON.stringify(existingMessages));
+}
+----
+
+=== Contact Management System
+
+[source,typescript]
+----
+// From ContactStore.ts - Shows the contact request system
+async function sendContactRequest(contactUserId: number) {
+    if (!currentUserId.value || !token.value) {
+        throw new Error('You must be logged in to send contact requests');
+    }
+
+    isLoading.value = true;
+    requestError.value = undefined;
+
+    try {
+        await apiService.addContact(currentUserId.value, contactUserId, token.value);
+        
+        // Update the contact lists after sending a request
+        await fetchOutgoingContactRequests();
+        return true;
+    } catch (err) {
+        requestError.value = err instanceof Error ? err.message : 'Failed to send contact request';
+        console.error('Error sending contact request:', err);
+        return false;
+    } finally {
+        isLoading.value = false;
+    }
+}
+----
 
 == Team Members
 
